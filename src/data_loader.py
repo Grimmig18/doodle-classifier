@@ -40,8 +40,7 @@ class DataLoader:
 
     def drawing_array_to_tupels(self, drawing):
         tupels = []
-        for i in range(len(drawing)):
-            tupels.extend([(drawing[i][0][j], drawing[i][1][j]) for j in range(len(drawing[i][0]))])
+        tupels.extend([(drawing[0][j], drawing[1][j]) for j in range(len(drawing[0]))])
 
         return tupels
 
