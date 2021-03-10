@@ -1,19 +1,29 @@
-from quickdraw import QuickDrawing
+from qd import QuickDrawing
 import json
 import numpy as np
 import png
 
+def count_items(a):
+    unique, counts = np.unique(a, return_counts=True)
+    print(dict(zip(unique, counts)))
+
 img = {}
+counter = 1
 with open('./data/raw/pizza.ndjson', 'r') as f:
     for l in f:
         js = json.loads(l)
         js['image'] = js['drawing']
         img = QuickDrawing('example', js)
-        break
+        
+        if counter == 6:
+            break
+        
+        counter = counter + 1
 
 # img.image.show('test')
 
 img_data = list(img.image.getdata())
+count_items(img_data)
 img_data_2 = list(img.get_image().getdata())
 img.image.show()
 # print(len(img_data))

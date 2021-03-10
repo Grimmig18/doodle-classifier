@@ -1,0 +1,184 @@
+from PIL import Image, ImageDraw
+import numpy as np
+
+class QuickDrawing():
+    """
+    Represents a single Quick, Draw! drawing.
+    """
+    def __init__(self, name, drawing_data):
+        self._name =name
+        self._drawing_data = drawing_data
+        self._strokes = None
+        self._image = None
+
+    @property
+    def name(self):
+        """
+        Returns the name of the drawing (anvil, aircraft, ant, etc).
+        """
+        return self._name
+
+    @property
+    def key_id(self):
+        """
+        Returns the id of the drawing.
+        """
+        return self._drawing_data["key_id"]
+
+    @property
+    def countrycode(self):
+        """
+        Returns the country code for the drawing.
+        """
+        return self._drawing_data["countrycode"].decode("utf-8")
+
+    @property
+    def recognized(self):
+        """
+        Returns a boolean representing whether the drawing was recognized.
+        """
+        return bool(self._drawing_data["recognized"])
+
+    @property
+    def timestamp(self):
+        """
+        Returns the time the drawing was created (in seconds since the epoch).
+        """
+        return self._drawing_data["timestamp"]
+
+    @property
+    def no_of_strokes(self):
+        """
+        Returns the number of pen strokes used to create the drawing.
+        """
+        return self._drawing_data["n_strokes"]
+
+    @property
+    def image_data(self):
+        """
+        Returns the raw image data as list of strokes with a list of X 
+        co-ordinates and a list of Y co-ordinates.
+        Co-ordinates are aligned to the top-left hand corner with values
+        from 0 to 255.
+        See https://github.com/googlecreativelab/quickdraw-dataset#simplified-drawing-files-ndjson
+        for more information regarding how the data is represented.
+        """
+        return self._drawing_data["image"]
+    
+    @property
+    def strokes(self):
+        """
+        Returns a list of pen strokes containing a list of (x,y) coordinates which make up the drawing.
+        To iterate though the strokes data use::
+        
+            from quickdraw import QuickDrawData
+            qd = QuickDrawData()
+            anvil = qd.get_drawing("anvil")
+            for stroke in anvil.strokes:
+                for x, y in stroke:
+                    print("x={} y={}".format(x, y)) 
+        """
+        # load the strokes
+        if self._strokes is None:
+            max_x, _, max_y, _, a = self.get_rescale_factors(self.image_data)
+            
+            self._strokes = []
+            for stroke in self.image_data:
+                points = []
+
+                stroke[0] = [x for x in np.rint(np.interp(stroke[0], (max_x - a, max_x), (0, 255))).tolist()]
+                stroke[1] = [y for y in np.rint(np.interp(stroke[1], (max_y - a, max_y), (0, 255))).tolist()]
+
+                xs = stroke[0]
+                ys = stroke[1]
+
+                if len(xs) != len(ys):
+                    raise Exception("something is wrong, different number of x's and y's")
+
+                for point in range(len(xs)):
+                    x = xs[point]
+                    y = ys[point]
+                    points.append((x,y))
+                self._strokes.append(points)
+
+
+        return self._strokes
+
+    @property
+    def image(self):
+        """
+        Returns a `PIL Image <https://pillow.readthedocs.io/en/3.0.x/reference/Image.html>`_ 
+        object of the drawing on a white background with a black drawing. Alternative image
+        parameters can be set using ``get_image()``.
+        To save the image you would use the ``save`` method::
+            from quickdraw import QuickDrawData
+            qd = QuickDrawData()
+            anvil = qd.get_drawing("anvil")
+            anvil.image.save("my_anvil.gif")
+            
+        """
+        if self._image is None:
+            self._image = self.get_image()
+
+        return self._image
+
+    def get_image(self, stroke_color=(0,0,0), stroke_width=2, bg_color=(255,255,255)):
+        """
+        Get a `PIL Image <https://pillow.readthedocs.io/en/3.0.x/reference/Image.html>`_ 
+        object of the drawing.
+        :param list stroke_color:
+            A list of RGB (red, green, blue) values for the stroke color,
+            defaults to (0,0,0).
+        :param int stroke_color:
+            A width of the stroke, defaults to 2.
+        :param list bg_color:
+            A list of RGB (red, green, blue) values for the background color,
+            defaults to (255,255,255).
+        """
+        image = Image.new("RGB", (255,255), color=bg_color)
+        image_draw = ImageDraw.Draw(image)
+
+        for stroke in self.strokes:
+            image_draw.line(stroke, fill=stroke_color, width=stroke_width)
+
+        return image
+
+    def get_rescale_factors(self, strokes): 
+        max_x = 0
+        min_x = 99999999
+
+        max_y = 0
+        min_y = 99999999
+
+        a = 0
+
+        for stroke in strokes:
+            _max_x = max(stroke[0])
+            _min_x = min(stroke[0])
+
+            if _max_x > max_x:
+                max_x = _max_x
+
+            if _min_x < min_x:
+                min_x = _min_x
+
+            _max_y = max(stroke[1])
+            _min_y = min(stroke[1])
+
+            if _max_y > max_y:
+                max_y = _max_y
+
+            if _min_y < min_y:
+                min_y = _min_y
+            
+        _a = max_x - min_x
+        if max_y - min_y > a:
+            a = max_y - min_y
+
+        if _a > a:
+            a = _a
+
+        return max_x, min_x, max_y, min_y, a
+
+    def __str__(self):
+        return "QuickDrawing key_id={}".format(self.key_id)
