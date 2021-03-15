@@ -135,7 +135,7 @@ class QuickDrawing():
             A list of RGB (red, green, blue) values for the background color,
             defaults to (255,255,255).
         """
-        image = Image.new("RGB", (255,255), color=bg_color)
+        image = Image.new("RGB", (256,256), color=bg_color)
         image_draw = ImageDraw.Draw(image)
 
         for stroke in self.strokes:
@@ -179,6 +179,30 @@ class QuickDrawing():
             a = _a
 
         return max_x, min_x, max_y, min_y, a
+
+    @staticmethod
+    def tupels_to_arrays(tupel_arrays):
+        strokes = [[], []]
+        for arr in tupel_arrays:
+            for t in arr:
+               strokes[0].append(int(t[0]))
+               strokes[1].append(int(t[1])) 
+        
+        return strokes
+
+
+    @staticmethod
+    def image_to_stroke_array(image, dim=256, background=[255,255,255]):
+        stroke = [[], []]
+        image = np.reshape(image, (dim, dim, 3))
+        for x in range(len(image)):
+            for y in range(len(image[x])):
+                if (image[x,y]!=background).any():
+                    stroke[0].append(x)
+                    stroke[1].append(y)
+
+        return stroke
+    
 
     def __str__(self):
         return "QuickDrawing key_id={}".format(self.key_id)

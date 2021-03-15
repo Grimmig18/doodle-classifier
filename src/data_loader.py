@@ -5,6 +5,9 @@ sys.path.append(root_dir)
 
 import json
 import numpy as np
+import random
+import string
+import png
 class DataLoader:
     
     # Indexes of default tree image words
@@ -62,5 +65,22 @@ class DataLoader:
         Transforms a n-dimensional matrix into an one dimensional array.
         """
         return np.reshape(mat, np.multiply(*mat.shape))
+
+    def save_image(self, image_data, name='random'):
+        if name == 'random':
+            name = ''.join(random.choice(string.ascii_uppercase + string.digits + string.ascii_lowercase) for _ in range(32))
+
+        data_tupels = self.drawing_array_to_tupels(image_data)
+        image = np.full((self.width, self.height), 1)
+
+        for t in data_tupels:
+            image[t[0], t[1]] = 0
+            
+        image = [[int(c) for c in row] for row in image]
+
+        w = png.Writer(len(image[0]), len(image), greyscale=True, bitdepth=1)
+        f = open(name + '.png', 'wb')
+        w.write(f, image)
+        f.close()
 
     
