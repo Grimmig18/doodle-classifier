@@ -15,6 +15,12 @@ class DataLoader:
     OCTOPUS = 1
     PIZZA = 2
 
+    word_index = {
+        "helicopter": HELICOPTER,
+        "octopus": OCTOPUS,
+        "pizza": PIZZA
+    }
+
     # Dict structure keywords
     WORD = 'word'
     DRAWING = 'drawing'
@@ -82,5 +88,55 @@ class DataLoader:
         f = open(name + '.png', 'wb')
         w.write(f, image)
         f.close()
+
+
+    def load_data_batches(self, batch_size=1000):
+        """
+        Returns an array of data (image data as a 256x256 matrix) and an array of corresponding labels.
+        Structure is similar to the iris dataset
+        """
+        data = []
+        labels = []
+
+        data.extend(self.load_batch(word=self.HELICOPTER, batch_size=batch_size))
+        labels.extend([self.HELICOPTER for _ in range(batch_size)])
+
+        data.extend(self.load_batch(word=self.OCTOPUS, batch_size=batch_size))
+        labels.extend([self.OCTOPUS for _ in range(batch_size)])
+
+        data.extend(self.load_batch(word=self.PIZZA, batch_size=batch_size))
+        labels.extend([self.PIZZA for _ in range(batch_size)])
+
+        return data, labels
+
+
+    def load_batch(self, word, batch_size=1000, start=0):
+        """
+        Load data from file and convert to image matrix
+        """
+
+        data = []
+
+        with open(self.path + self.files[word], 'r') as f:
+            # skip files
+            counter = 0
+            for l in f:
+                counter = counter + 1
+                if counter - 1 < start:
+                    continue
+                elif start + batch_size == counter - 1:
+                    break
+
+                d = eval(l)
+                data.append(self.matrix_from_image(self.drawing_array_to_tupels(d[self.DRAWING])))
+
+        return data
+
+
+    def load_image_matrix(self, word, number):
+        data = self.load_data_from_file(word, number)
+        drawing_mat = self.matrix_from_image(self.drawing_array_to_tupels(data[self.DRAWING]))
+
+        return drawing_mat, self.word_index[data[self.WORD]]
 
     
