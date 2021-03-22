@@ -67,7 +67,7 @@ def compute_file(f_name):
                 print_progress(round(percentage, 2), start_time)
 
                 # Save batch
-                with open('./data/processed/' + f_name, 'a+', encoding='utf-8') as f:
+                with open('./data/processed/test/' + f_name, 'a+', encoding='utf-8') as f:
                     for r in rec:
                         f.write(str(r)+ '\n')
 
