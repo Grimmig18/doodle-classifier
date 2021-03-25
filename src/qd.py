@@ -1,3 +1,9 @@
+"""
+Taken from https://github.com/martinohanlon/quickdraw_python
+Paritally modified to suit the needs of our projects.
+"""
+
+
 from PIL import Image, ImageDraw
 import numpy as np
 
@@ -11,47 +17,6 @@ class QuickDrawing():
         self._strokes = None
         self._image = None
 
-    @property
-    def name(self):
-        """
-        Returns the name of the drawing (anvil, aircraft, ant, etc).
-        """
-        return self._name
-
-    @property
-    def key_id(self):
-        """
-        Returns the id of the drawing.
-        """
-        return self._drawing_data["key_id"]
-
-    @property
-    def countrycode(self):
-        """
-        Returns the country code for the drawing.
-        """
-        return self._drawing_data["countrycode"].decode("utf-8")
-
-    @property
-    def recognized(self):
-        """
-        Returns a boolean representing whether the drawing was recognized.
-        """
-        return bool(self._drawing_data["recognized"])
-
-    @property
-    def timestamp(self):
-        """
-        Returns the time the drawing was created (in seconds since the epoch).
-        """
-        return self._drawing_data["timestamp"]
-
-    @property
-    def no_of_strokes(self):
-        """
-        Returns the number of pen strokes used to create the drawing.
-        """
-        return self._drawing_data["n_strokes"]
 
     @property
     def image_data(self):
@@ -144,24 +109,35 @@ class QuickDrawing():
         return image
 
     def get_rescale_factors(self, strokes): 
+        """
+        Get the max and min x and y value of a given image, by processing its strokes
+        a is the side length of a square perfectly fitting the given image
+        """
+
+        # Initialize the return valoes with smallest possible / largest possible values
         max_x = 0
-        min_x = 99999999
+        min_x = np.inf
 
         max_y = 0
-        min_y = 99999999
+        min_y = np.inf
 
         a = 0
 
+        # Loop trhough all strokes to find min / max values
         for stroke in strokes:
+
+            # Potential new min / max
             _max_x = max(stroke[0])
             _min_x = min(stroke[0])
 
+            # If new min / max is found, assign to global min / max of drawing
             if _max_x > max_x:
                 max_x = _max_x
 
             if _min_x < min_x:
                 min_x = _min_x
 
+            # Potential new min / max
             _max_y = max(stroke[1])
             _min_y = min(stroke[1])
 
@@ -171,6 +147,7 @@ class QuickDrawing():
             if _min_y < min_y:
                 min_y = _min_y
             
+        # Caluclate the side length of a square perfectly fitting the drawing
         _a = max_x - min_x
         if max_y - min_y > a:
             a = max_y - min_y
@@ -180,19 +157,25 @@ class QuickDrawing():
 
         return max_x, min_x, max_y, min_y, a
 
-    @staticmethod
-    def tupels_to_arrays(tupel_arrays):
-        strokes = [[], []]
-        for arr in tupel_arrays:
-            for t in arr:
-               strokes[0].append(int(t[0]))
-               strokes[1].append(int(t[1])) 
+    # @staticmethod
+    # def tupels_to_arrays(tupel_arrays):
+    #     """
+    #     Takes an list of strokes, each represented as a list of (x, y) tupels and converts them into  
+    #     """
+    #     strokes = [[], []]
+    #     for arr in tupel_arrays:
+    #         for t in arr:
+    #            strokes[0].append(int(t[0]))
+    #            strokes[1].append(int(t[1])) 
         
-        return strokes
+    #     return strokes
 
 
     @staticmethod
     def image_to_stroke_array(image, dim=256, background=[255,255,255]):
+        """
+        
+        """
         stroke = [[], []]
         image = np.reshape(image, (dim, dim, 3))
         for x in range(len(image)):

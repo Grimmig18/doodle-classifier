@@ -1,5 +1,7 @@
 import os
 import sys
+
+from sklearn.utils.extmath import randomized_range_finder
 root_dir = os.path.join(os.getcwd(), '..')
 sys.path.append(root_dir)
 
@@ -8,6 +10,8 @@ import numpy as np
 import random
 import string
 import png
+
+from src.preprocess_data import total_lines
 class DataLoader:
     
     # Indexes of default tree image words
@@ -20,6 +24,8 @@ class DataLoader:
         "octopus": OCTOPUS,
         "pizza": PIZZA
     }
+
+    line_index = {}
 
     # Dict structure keywords
     WORD = 'word'
@@ -90,7 +96,7 @@ class DataLoader:
         f.close()
 
 
-    def load_data_batches(self, batch_size=1000):
+    def load_data_batches(self, batch_size=1000, skip=0, return_1d=False):
         """
         Returns an array of data (image data as a 256x256 matrix) and an array of corresponding labels.
         Structure is similar to the iris dataset
@@ -98,14 +104,19 @@ class DataLoader:
         data = []
         labels = []
 
-        data.extend(self.load_batch(word=self.HELICOPTER, batch_size=batch_size))
+        data.extend(self.load_batch(word=self.HELICOPTER, batch_size=batch_size, start=skip))
         labels.extend([self.HELICOPTER for _ in range(batch_size)])
 
-        data.extend(self.load_batch(word=self.OCTOPUS, batch_size=batch_size))
+        data.extend(self.load_batch(word=self.OCTOPUS, batch_size=batch_size, start=skip))
         labels.extend([self.OCTOPUS for _ in range(batch_size)])
 
-        data.extend(self.load_batch(word=self.PIZZA, batch_size=batch_size))
+        data.extend(self.load_batch(word=self.PIZZA, batch_size=batch_size, start=skip))
         labels.extend([self.PIZZA for _ in range(batch_size)])
+
+        data_1d = np.array([self.one_dimensional_array_from_matrix(mat) for mat in data])
+
+        if return_1d:
+            data = data_1d
 
         return data, labels
 
@@ -138,5 +149,38 @@ class DataLoader:
         drawing_mat = self.matrix_from_image(self.drawing_array_to_tupels(data[self.DRAWING]))
 
         return drawing_mat, self.word_index[data[self.WORD]]
+
+    
+    
+    def load_random_test_data(self, sample_size=500, return_1d=False):
+        data = []
+        labels = []
+
+        for file in self.files:
+
+            self.line_index, line_no = total_lines(self.line_index, file, path='../data/processed/')
+
+
+            random_list = random.sample(range(0, line_no), sample_size)
+            label = self.word_index[file.split(".")[0]]
+
+            counter = 0
+            with open('../data/processed/' + file, 'r') as f:
+
+                for i, l in enumerate(f):
+                    if i in random_list:
+                        d = eval(l)
+                        data.append(self.matrix_from_image(self.drawing_array_to_tupels(d[self.DRAWING])))
+                        labels.append(label)
+
+        data_1d = np.array([self.one_dimensional_array_from_matrix(mat) for mat in data])
+
+        if return_1d:
+            data = data_1d
+
+        return data, labels
+
+
+            
 
     
