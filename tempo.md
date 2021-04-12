@@ -144,8 +144,8 @@ Um die Bilder auf das Nötigste zu begrenzen geben wir auch `a` zurück, welches
 Die dargestellten Schritte führen wir für alle von Google erkannten Bilder aus und speichern die neu skalierten und gefüllte Strokes in einer neuen Datei in der Form:
 ```json
 {
-"word": "pizza", 
-"drawing": [[19, 19, 20, ...], [40, 41, 42, ...], ...]
+    "word": "pizza", 
+    "drawing": [[19, 19, 20, ...], [40, 41, 42, ...], ...]
 }
 ```
 wobei das Feld `"drawing"` auch hier wieder die Strokes in (fast) gleicher Form wie die Rohdaten darstellt:
