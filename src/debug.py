@@ -1,3 +1,26 @@
+# Setup
+import os
+import sys
+root_dir = os.path.join(os.getcwd(), '..')
+sys.path.append('e:\\Projekte\\2021\\ML\\doodle-classifier')
+sys.path.append(root_dir)
+# print(os.getcwd())
+
+import numpy as np
+from sklearn.neural_network import MLPClassifier
+from sklearn.model_selection import train_test_split
+
+from src.data_loader import DataLoader as DL
+from src.coach import train_in_batches
+
+
+dl = DL()
+clf_batches = MLPClassifier(hidden_layer_sizes=(128,))
+for i in range(3):
+    data, labels = dl.get_next_training_set(100)
+    clf_batches.partial_fit(data, labels, np.unique(labels))
+
+
 # import os
 # import sys
 # root_dir = os.path.join(os.getcwd(), '..')
@@ -59,7 +82,7 @@
 # f.close()
 
 
-with open('./data/processed/pizza.ndjson', 'r') as f:
-    for i, line in enumerate(f):
-        print(i, ": ", line)
-        break
+# with open('./data/processed/pizza.ndjson', 'r') as f:
+#     for i, line in enumerate(f):
+#         print(i, ": ", line)
+#         break

@@ -5,7 +5,6 @@ from sklearn.utils.extmath import randomized_range_finder
 root_dir = os.path.join(os.getcwd(), '..')
 sys.path.append(root_dir)
 
-import json
 import numpy as np
 import random
 import string
@@ -13,11 +12,17 @@ import png
 
 from src.preprocess_data import total_lines
 class DataLoader:
+
+    max_possible_lines = 0 
+    current_training_set = {}
+    last_index = 0
     
     # Indexes of default tree image words
     HELICOPTER = 0
     OCTOPUS = 1
     PIZZA = 2
+
+    classes = [HELICOPTER, OCTOPUS, PIZZA]
 
     word_index = {
         "helicopter": HELICOPTER,
@@ -38,6 +43,22 @@ class DataLoader:
 
         self.width = width
         self.height = height
+
+        self.set_max_line_count()
+
+
+
+    def set_max_line_count(self):
+        max_l = np.inf
+        for file in self.files:
+            with open(self.path + file, 'r') as f:
+                for i, _ in enumerate(f):
+                    pass
+                if max_l > i:
+                    max_l = i
+
+        print("Set max_possible_lines to {}".format(max_l))
+        self.max_possible_lines = max_l
 
 
     def load_data_from_file(self, file_index, line=0):
@@ -76,6 +97,7 @@ class DataLoader:
         """
         Transforms a n-dimensional matrix into an one dimensional array.
         """
+        # print(mat.shape)
         return np.reshape(mat, np.multiply(*mat.shape))
 
     def save_image(self, image_data, name='random'):
@@ -131,7 +153,7 @@ class DataLoader:
         with open(self.path + self.files[word], 'r') as f:
             # skip files
             counter = 0
-            for l in f:
+            for i, l in enumerate(f):
                 counter = counter + 1
                 if counter - 1 < start:
                     continue
@@ -179,6 +201,54 @@ class DataLoader:
             data = data_1d
 
         return data, labels
+
+    def get_next_training_set(self, batch_size=1000):
+        self.load_next(batch_size)
+        return self.current_training_set['data'], self.current_training_set['labels']
+         
+
+
+    def load_next(self, increase, return_1d=True):
+        self.current_training_set = {}
+        col_data = []
+        col_labels = []
+        shape = ()
+        counter = 0
+        # Load next data batch
+        for file in self.files:
+            label = self.word_index[file.split(".")[0]]
+
+            with open('../data/processed/' + file, 'r') as f:
+                for i, l in enumerate(f):
+                    if i < self.last_index:
+                        continue
+                    if i >= self.last_index + increase:
+                        self.last_index = i
+                        break
+
+                    counter = counter + 1
+                    
+                    t = self.matrix_from_image(self.drawing_array_to_tupels(eval(l)[self.DRAWING]))
+                    shape = t.shape
+                    col_data = np.append(col_data, t)
+                    col_labels.append(label)
+
+                    # self.current_training_set = np.append(self.current_training_set, [t, label], axis=1)
+                    # self.current_training_set[0] = np.append(self.current_training_set[0], self.matrix_from_image(self.drawing_array_to_tupels(t[self.DRAWING])))
+                    # self.current_training_set[0].append()
+                    # self.current_training_set[1] = np.append(self.current_training_set[1], label)
+
+        # Reshape col_data list
+        col_data = np.reshape(col_data, (counter, *shape))
+        
+        self.current_training_set['labels'] = col_labels
+
+        if return_1d:
+            data_1d = np.array([self.one_dimensional_array_from_matrix(mat) for mat in col_data])
+            col_data = data_1d
+
+        self.current_training_set['data'] = col_data
+
 
 
             

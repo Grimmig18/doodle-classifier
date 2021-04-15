@@ -30,8 +30,8 @@ def train_in_batches(data_size, clf=MLPClassifier(), batch_size=1000):
     # Load random test data and train
     test_data, test_labels = dl.load_random_test_data(return_1d=True)
 
-    print(np.array(test_data).shape, np.array(test_labels).shape)
-    print(clf.score(test_data, test_labels))
+    # print(np.array(test_data).shape, np.array(test_labels).shape)
+    # print(clf.score(test_data, test_labels))
 
     return clf
 
