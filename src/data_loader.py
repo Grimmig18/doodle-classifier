@@ -9,6 +9,7 @@ import numpy as np
 import random
 import string
 import png
+from PIL import Image
 
 from src.preprocess_data import total_lines
 class DataLoader:
@@ -22,7 +23,7 @@ class DataLoader:
     OCTOPUS = 1
     PIZZA = 2
 
-    classes = [HELICOPTER, OCTOPUS, PIZZA]
+    classes = []
 
     word_index = {
         "helicopter": HELICOPTER,
@@ -30,11 +31,20 @@ class DataLoader:
         "pizza": PIZZA
     }
 
+    number_index = {
+        0: "helicopter",
+        1: "octopus",
+        2: "pizza"
+    }
+
     line_index = {}
 
     # Dict structure keywords
     WORD = 'word'
     DRAWING = 'drawing'
+
+    # Model save path
+    model_save_path = '../model/clf_batches.sav'
 
 
     def __init__(self, files=['helicopter.ndjson', 'octopus.ndjson', 'pizza.ndjson'], path='../data/processed/', width=256, height=256):
@@ -44,7 +54,7 @@ class DataLoader:
         self.width = width
         self.height = height
 
-        self.set_max_line_count()
+        # self.set_max_line_count()
 
 
 
@@ -59,6 +69,13 @@ class DataLoader:
 
         print("Set max_possible_lines to {}".format(max_l))
         self.max_possible_lines = max_l
+
+    def get_classes(self):
+        self.classes = [k for k in self.number_index]
+        return self.classes
+
+    def get_class_names(self):
+        return [self.number_index[k] for k in self.number_index]
 
 
     def load_data_from_file(self, file_index, line=0):
@@ -117,6 +134,18 @@ class DataLoader:
         w.write(f, image)
         f.close()
 
+    def load_image(self, path):
+        img = Image.open(path)
+        arr = np.array(img)
+
+        new_arr = np.full(arr.shape[:-1], 0)
+
+        for l in range(arr.shape[0]):
+            for t in range(len(arr[l])):
+                if np.array([True if v == 255 else False for v in arr[l,t]]).all():
+                    new_arr[l,t] = 1
+
+        return new_arr, np.reshape(new_arr, np.multiply(*new_arr.shape))
 
     def load_data_batches(self, batch_size=1000, skip=0, return_1d=False):
         """
@@ -248,6 +277,25 @@ class DataLoader:
             col_data = data_1d
 
         self.current_training_set['data'] = col_data
+
+    
+
+    def strokes_from_matrix(self, mat):
+
+        # for l in range(arr.shape[0]):
+        #     for t in range(len(arr[l])):
+        #         if np.array([True if v == 255 else False for v in arr[l,t]]).all():
+        #             new_arr[l,t] = 1
+        stroke = [[], []]
+        for i, row in enumerate(mat):
+            for j, elem in enumerate(row):
+                if elem == 1:
+                    stroke[0].append(i)
+                    stroke[1].append(j)
+
+        return stroke
+
+
 
 
 

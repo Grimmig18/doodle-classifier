@@ -27,6 +27,7 @@ def print_progress(p, start_time):
 
 def total_lines(line_index, f_name, path='../data/raw/'):
     if f_name not in line_index:
+        print("Count line numbers in file: {}".format(f_name))
         total = 0
         with open(path + f_name, 'r', encoding='utf-8') as f:
             total = sum(1 for l in f)
@@ -34,6 +35,7 @@ def total_lines(line_index, f_name, path='../data/raw/'):
         line_index[f_name] = total
         return line_index, total
     else:
+        print("Got line number from dict: {}".format(f_name))
         return line_index, line_index[f_name]
 
 
