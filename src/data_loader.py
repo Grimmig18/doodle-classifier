@@ -134,18 +134,41 @@ class DataLoader:
         w.write(f, image)
         f.close()
 
-    def load_image(self, path):
+    def load_image(self, path, is_array=True, is_hand_drawn=False):
         img = Image.open(path)
         arr = np.array(img)
 
-        new_arr = np.full(arr.shape[:-1], 0)
+        new_arr = np.full(arr.shape[:-1 if is_array else None], 1)
 
         for l in range(arr.shape[0]):
             for t in range(len(arr[l])):
-                if np.array([True if v == 255 else False for v in arr[l,t]]).all():
-                    new_arr[l,t] = 1
+                if is_array:
+                    if np.array([True if v == 255 else False for v in arr[l,t]]).all():
+                        new_arr[l,t] = 0
+                else:
+                    if arr[l,t] == True or (is_hand_drawn and arr[l,t] == 255):
+                        new_arr[l,t] = 0
 
-        return new_arr, np.reshape(new_arr, np.multiply(*new_arr.shape))
+        
+        return new_arr, self.one_dimensional_array_from_matrix(new_arr)
+
+    def load_hand_drawn(self, path):
+        img = Image.open(path)
+        arr = np.array(img)
+
+        new_arr = np.full(arr.shape[:], 1)
+
+        for l in range(arr.shape[0]):
+            for t in range(len(arr[l])):
+                if arr[l,t] == 255:
+                    new_arr[l,t] = 0
+
+        return new_arr, self.one_dimensional_array_from_matrix(new_arr)
+
+        
+
+
+        
 
     def load_data_batches(self, batch_size=1000, skip=0, return_1d=False):
         """
@@ -196,10 +219,10 @@ class DataLoader:
 
 
     def load_image_matrix(self, word, number):
-        data = self.load_data_from_file(word, number)
+        data = self.load_data_from_file(self.word_index[word], number)
         drawing_mat = self.matrix_from_image(self.drawing_array_to_tupels(data[self.DRAWING]))
 
-        return drawing_mat, self.word_index[data[self.WORD]]
+        return drawing_mat, self.word_index[data[self.WORD]], data[self.DRAWING]
 
     
     
@@ -286,14 +309,16 @@ class DataLoader:
         #     for t in range(len(arr[l])):
         #         if np.array([True if v == 255 else False for v in arr[l,t]]).all():
         #             new_arr[l,t] = 1
+        print(mat)
         stroke = [[], []]
         for i, row in enumerate(mat):
             for j, elem in enumerate(row):
-                if elem == 1:
+                if elem == 0:
                     stroke[0].append(i)
                     stroke[1].append(j)
 
         return stroke
+
 
 
 
