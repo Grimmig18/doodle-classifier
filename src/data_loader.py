@@ -48,6 +48,9 @@ class DataLoader:
 
 
     def __init__(self, files=['helicopter.ndjson', 'octopus.ndjson', 'pizza.ndjson'], path='../data/processed/', width=256, height=256):
+        """
+        Create a DataLoader instance and initialize some needed variables
+        """
         self.files = files
         self.path = path
 
@@ -59,6 +62,9 @@ class DataLoader:
 
 
     def set_max_line_count(self):
+        """
+        Set the max_possible_lines by enumerating through all files
+        """
         max_l = np.inf
         for file in self.files:
             with open(self.path + file, 'r') as f:
@@ -71,10 +77,16 @@ class DataLoader:
         self.max_possible_lines = max_l
 
     def get_classes(self):
+        """
+        Return a list of numeric classes (labels)
+        """
         self.classes = [k for k in self.number_index]
         return self.classes
 
     def get_class_names(self):
+        """
+        Return a list of class names (label names)
+        """
         return [self.number_index[k] for k in self.number_index]
 
 
@@ -92,6 +104,9 @@ class DataLoader:
 
 
     def drawing_array_to_tupels(self, drawing):
+        """
+        Turns a stroke array into a list of (x, y) tupels
+        """
         tupels = []
         tupels.extend([(drawing[0][j], drawing[1][j]) for j in range(len(drawing[0]))])
 
@@ -110,6 +125,7 @@ class DataLoader:
 
         return mat
 
+
     def one_dimensional_array_from_matrix(self, mat):
         """
         Transforms a n-dimensional matrix into an one dimensional array.
@@ -117,7 +133,11 @@ class DataLoader:
         # print(mat.shape)
         return np.reshape(mat, np.multiply(*mat.shape))
 
+
     def save_image(self, image_data, name='random'):
+        """
+        Save an image as .png file on hard drive
+        """
         if name == 'random':
             name = ''.join(random.choice(string.ascii_uppercase + string.digits + string.ascii_lowercase) for _ in range(32))
 
@@ -134,7 +154,11 @@ class DataLoader:
         w.write(f, image)
         f.close()
 
+
     def load_image(self, path, is_array=True, is_hand_drawn=False):
+        """
+        Load an image (from the data set) from drive into appopiate format
+        """
         img = Image.open(path)
         arr = np.array(img)
 
@@ -152,7 +176,11 @@ class DataLoader:
         
         return new_arr, self.one_dimensional_array_from_matrix(new_arr)
 
+
     def load_hand_drawn(self, path):
+        """
+        Load a handdrawn image from drive into appopiate format
+        """
         img = Image.open(path)
         arr = np.array(img)
 
@@ -219,6 +247,9 @@ class DataLoader:
 
 
     def load_image_matrix(self, word, number):
+        """
+        Loads a image as a 256x256 matrix from the data set
+        """
         data = self.load_data_from_file(self.word_index[word], number)
         drawing_mat = self.matrix_from_image(self.drawing_array_to_tupels(data[self.DRAWING]))
 
@@ -227,6 +258,9 @@ class DataLoader:
     
     
     def load_random_test_data(self, sample_size=500, return_1d=False):
+        """
+        Load a set of random datapoints from the data set
+        """
         data = []
         labels = []
 
@@ -255,12 +289,18 @@ class DataLoader:
         return data, labels
 
     def get_next_training_set(self, batch_size=1000):
+        """
+        Load the next batch of training data
+        """
         self.load_next(batch_size)
         return self.current_training_set['data'], self.current_training_set['labels']
          
 
 
     def load_next(self, increase, return_1d=True):
+        """
+        Load the next data point, starting by last one, increase by given amount
+        """
         self.current_training_set = {}
         col_data = []
         col_labels = []
@@ -285,10 +325,6 @@ class DataLoader:
                     col_data = np.append(col_data, t)
                     col_labels.append(label)
 
-                    # self.current_training_set = np.append(self.current_training_set, [t, label], axis=1)
-                    # self.current_training_set[0] = np.append(self.current_training_set[0], self.matrix_from_image(self.drawing_array_to_tupels(t[self.DRAWING])))
-                    # self.current_training_set[0].append()
-                    # self.current_training_set[1] = np.append(self.current_training_set[1], label)
 
         # Reshape col_data list
         col_data = np.reshape(col_data, (counter, *shape))
@@ -304,11 +340,9 @@ class DataLoader:
     
 
     def strokes_from_matrix(self, mat):
-
-        # for l in range(arr.shape[0]):
-        #     for t in range(len(arr[l])):
-        #         if np.array([True if v == 255 else False for v in arr[l,t]]).all():
-        #             new_arr[l,t] = 1
+        """
+        Turns an image matrix into a stroke array
+        """
         print(mat)
         stroke = [[], []]
         for i, row in enumerate(mat):
